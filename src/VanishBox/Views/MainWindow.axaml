@@ -1,0 +1,93 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:VanishBox.ViewModels"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        x:Class="VanishBox.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        CanResize="False"
+        Width="700" Height="433"
+        WindowStartupLocation="CenterScreen"
+        Icon="/Assets/app.ico"
+        Title="Программа защиты данных VanishBox">
+
+    <Design.DataContext>
+        <!-- This only sets the DataContext for the previewer in an IDE,
+             to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
+        <vm:MainWindowViewModel/>
+    </Design.DataContext>
+
+	<Border Background="LightBlue" BorderBrush="Black" BorderThickness="0" Padding="0">
+		<StackPanel Background="White" Width="700" Height="433"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Top">
+			<Menu>
+				<MenuItem Header="Файл">
+					<MenuItem Header="Открыть" Command="{Binding SelectFilesCommand}">
+						<MenuItem.Icon>
+							<Image Source="/Assets/open.png" />
+						</MenuItem.Icon>
+					</MenuItem>
+					<MenuItem Header="Выход" Command="{Binding ExitCommand}">
+                        <MenuItem.Icon>
+							<Image Source="/Assets/exit.png" />
+						</MenuItem.Icon>
+					</MenuItem>
+				</MenuItem>
+				<MenuItem Header="Настройки">
+					<MenuItem Header="Сгенерировать ключ" Command="{Binding GeneratedKeyCommand}">
+						<MenuItem.Icon>
+							<Image Source="/Assets/key.png" />
+						</MenuItem.Icon>
+					</MenuItem>
+					<MenuItem Header="Сброс настроек" Command="{Binding ResetSettingsCommand}">
+						<MenuItem.Icon>
+							<Image Source="/Assets/reset.png"/>
+						</MenuItem.Icon>
+					</MenuItem>
+				</MenuItem>
+				<MenuItem Header="Справка">
+					<MenuItem Header="О программе" Command="{Binding AboutProgramCommand}">
+                        <MenuItem.Icon>
+							<Image Source="/Assets/info.png" />
+						</MenuItem.Icon>
+					</MenuItem>
+				</MenuItem>
+			</Menu>
+			<Grid VerticalAlignment="Stretch" RowDefinitions="Auto,Auto,Auto"
+                  Margin="5,5,5,5">
+				<TextBox Grid.Row="0" Grid.Column="0" AcceptsReturn="True" Width="690" Height="305"
+                                     TextWrapping="Wrap" HorizontalAlignment="Left"
+                                     IsReadOnly="True"
+                                     Text="{Binding InfoText}"
+                                     />
+                <StackPanel Grid.Row="2" Grid.Column="0" Height="35" >
+                    <TextBlock IsVisible="{Binding ShowProgressControls}"
+                               Text="{Binding ProgressText}"/>
+                    <ProgressBar Name="RunProgress" IsVisible="{Binding ShowProgressControls}"
+                                 Value="{Binding ProgressValue}"
+                                 ShowProgressText="True"
+                                 IsIndeterminate="False" Minimum="0" Maximum="100" Height="20"/>
+                </StackPanel>
+            </Grid>
+            <Grid RowDefinitions="Auto"
+                  ColumnDefinitions="Auto,Auto" HorizontalAlignment="Right"
+                  Margin="10,10,5,0">
+                <Button Grid.Row="0" Grid.Column="0" HorizontalAlignment="Left"
+                        Margin="10,0,0,10" Width="120" Foreground="White" Background="#CC0099"
+                        HorizontalContentAlignment="Center"
+                        Command="{Binding CryptCommand}"
+                        IsEnabled="{Binding OperationsButtonEnable}">
+                    Зашифровать</Button>
+                <Button Grid.Row="" Grid.Column="1" HorizontalAlignment="Right"
+                        Margin="10,0,0,10" Width="120"
+                        Foreground="White" HorizontalContentAlignment="Center" Background="#00A9FF"
+                        Command="{Binding DecryptCommand}"
+                        IsEnabled="{Binding OperationsButtonEnable}">
+                    Расшифровать
+                </Button>
+            </Grid>
+		</StackPanel>
+	</Border>
+</Window>

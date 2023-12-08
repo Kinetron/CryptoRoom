@@ -1,0 +1,43 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="using:VanishBox.ViewModels"
+        xmlns:viewModels="clr-namespace:VanishBox.ViewModels"
+        mc:Ignorable="d"
+        x:Class="VanishBox.Views.AboutProgramWindow"
+        x:DataType="vm:AboutProgramViewModel"
+        CanResize="False"
+        Width="385" Height="240"
+        WindowStartupLocation="CenterScreen"
+        Icon="/Assets/app.ico"
+        Title="О программе">
+
+    <Design.DataContext>
+        <vm:AboutProgramViewModel/>
+    </Design.DataContext>
+
+	<Window.Styles>
+        <Style Selector="TextBlock.Title">
+            <Setter Property="FontFamily" Value="Times New Roman"/>
+            <Setter Property="FontStyle" Value="Normal"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Foreground" Value="#1B1BB3"/>
+        </Style>
+    </Window.Styles>
+
+	<Grid ColumnDefinitions="88,295" RowDefinitions="Auto,Auto,Auto" Margin="7,0,7,0">
+        <TextBlock Classes="Title" Text="Cистема криптографической защиты информации Vanish Box." HorizontalAlignment="Center"
+                   Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" 
+                   Margin="0,5,0,5"/>
+        <Image  Grid.Row="1" Grid.Column="0" Source="/Assets/logo.png" Height="180"
+                 HorizontalAlignment="Left"/>
+        <TextBox Grid.Row="1" Grid.Column="1" Width="280" AcceptsReturn="True" 
+                 TextWrapping="Wrap" HorizontalAlignment="Left" 
+                 Text="{Binding Info}"/>
+        <Button Content="Закрыть" Grid.Row="2" Grid.Column="1" HorizontalAlignment="Right"
+                Margin="0,3,15,3"
+                Command="{Binding ExitCommand}"/>
+    </Grid>
+</Window>

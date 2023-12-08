@@ -1,0 +1,54 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.33530.505
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CryptoRoomApp", "CryptoRoomApp\CryptoRoomApp.csproj", "{12B6EF33-6C0E-4BB7-8751-6AD1498F04B6}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CryptoRoomLib", "CryptoRoomLib\CryptoRoomLib.csproj", "{5BB006FB-BC6A-44C6-8724-97D2BC22C2D1}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CryptoRoomLib.Tests", "CryptoRoomLib.Tests\CryptoRoomLib.Tests.csproj", "{9428D63A-CE57-487A-AA87-872DDDB09E4A}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "VanishBox", "VanishBox\VanishBox.csproj", "{20A81591-22AA-4A8E-83E5-EAA40ADFAC07}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Ui", "Ui", "{8445A4CF-B93D-48A0-99E5-385251843CFD}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MessageBox.Avalonia", "Ui\MessageBox.Avalonia\MessageBox.Avalonia.csproj", "{58E69006-D8A3-47F4-9A76-88BB2C14D00D}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{12B6EF33-6C0E-4BB7-8751-6AD1498F04B6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{12B6EF33-6C0E-4BB7-8751-6AD1498F04B6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{12B6EF33-6C0E-4BB7-8751-6AD1498F04B6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{12B6EF33-6C0E-4BB7-8751-6AD1498F04B6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5BB006FB-BC6A-44C6-8724-97D2BC22C2D1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5BB006FB-BC6A-44C6-8724-97D2BC22C2D1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5BB006FB-BC6A-44C6-8724-97D2BC22C2D1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5BB006FB-BC6A-44C6-8724-97D2BC22C2D1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9428D63A-CE57-487A-AA87-872DDDB09E4A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9428D63A-CE57-487A-AA87-872DDDB09E4A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9428D63A-CE57-487A-AA87-872DDDB09E4A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9428D63A-CE57-487A-AA87-872DDDB09E4A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{20A81591-22AA-4A8E-83E5-EAA40ADFAC07}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{20A81591-22AA-4A8E-83E5-EAA40ADFAC07}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{20A81591-22AA-4A8E-83E5-EAA40ADFAC07}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{20A81591-22AA-4A8E-83E5-EAA40ADFAC07}.Release|Any CPU.Build.0 = Release|Any CPU
+		{58E69006-D8A3-47F4-9A76-88BB2C14D00D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{58E69006-D8A3-47F4-9A76-88BB2C14D00D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{58E69006-D8A3-47F4-9A76-88BB2C14D00D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{58E69006-D8A3-47F4-9A76-88BB2C14D00D}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{58E69006-D8A3-47F4-9A76-88BB2C14D00D} = {8445A4CF-B93D-48A0-99E5-385251843CFD}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {C249F6DF-7F11-49C2-93F0-7855E0C54A9C}
+	EndGlobalSection
+EndGlobal
