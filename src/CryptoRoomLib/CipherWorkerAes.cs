@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Security.Cryptography;
@@ -21,6 +22,13 @@ namespace CryptoRoomLib
 		/// Размер блока, содержащего информацию о размере закодированного файла. 8Байт.
 		/// </summary>
 		private const int FileSizeBlockLen = 8;
+		
+		/// <summary>
+		/// Размер блока шифра aes. 128 байт, изменен быть не может.
+		/// </summary>
+		private const int aesBlockSize = 16;
+
+		private const int bufferSize = 32768;
 
 		public CipherWorkerAes(ICipherAlgoritm algoritm)
 		{
@@ -32,15 +40,19 @@ namespace CryptoRoomLib
 		{
 			throw new NotImplementedException();
 		}
-		private void CopyStream(Stream input, Stream output, int bytes)
+		private void CopyStream(Stream input, Stream output, int bytes, Action<ulong> progress)
 		{
-			byte[] buffer = new byte[32768];
+			byte[] buffer = new byte[bufferSize];
 			int read;
+			ulong writeBytes = 0;
+
 			while (bytes > 0 &&
 			       (read = input.Read(buffer, 0, Math.Min(buffer.Length, bytes))) > 0)
 			{
 				output.Write(buffer, 0, read);
 				bytes -= read;
+				writeBytes += (ulong)read;
+				progress(writeBytes);
 			}
 		}
 
@@ -82,38 +94,43 @@ namespace CryptoRoomLib
 						$"Расшифровка файла {fileName} завершена.",
 					() =>
 					{
-						using (SymmetricAlgorithm cipher = Aes.Create())
-						using (FileStream outFile = new FileStream(resultFileName, FileMode.Create, FileAccess.Write))
-						using (FileStream inFile = new FileStream(srcPath, FileMode.Open, FileAccess.Read))
+
+						//Согласно формату файла iv 32 байта. Но размер блока шифра 128.
+						byte[] iv = new byte[aesBlockSize];
+						Buffer.BlockCopy(commonInfo.Iv, 0, iv, 0, iv.Length);
+
+						using (var aes = Aes.Create())
 						{
-							//Читаем с места где содержатся данные.
-							inFile.Position = commonInfo.BeginDataPosition;
-
-							byte[] readBuffer = new byte[FileFormat.DataSizeInfo];
-							Span<byte> buffSpan = new Span<byte>(readBuffer);
-							inFile.Read(buffSpan);
-
-							//Размер рельного файла.
-							int fileLength = BitConverter.ToInt32(readBuffer);
-
-							cipher.Key = commonInfo.SessionKey;
-							cipher.Padding = PaddingMode.PKCS7;
-							cipher.Mode = CipherMode.CBC;
-
-							//Согласно формату файла iv 32 байта.
-							byte[] iv = new byte[16];
-							Buffer.BlockCopy(commonInfo.Iv, 0, iv, 0, iv.Length);
-							cipher.IV = iv;
-
-							using (var cryptoStream =
-							       new CryptoStream(outFile, cipher.CreateDecryptor(), CryptoStreamMode.Write))
+							using (FileStream inFile = new FileStream(srcPath, FileMode.Open, FileAccess.Read))
 							{
-								int rest = fileLength % 16;
-								if (rest != 0)
+								//Читаем с места где содержатся данные.
+								inFile.Position = commonInfo.BeginDataPosition;
+
+								byte[] readBuffer = new byte[FileFormat.DataSizeInfo];
+								Span<byte> buffSpan = new Span<byte>(readBuffer);
+								inFile.Read(buffSpan);
+
+								//Размер рельного файла.
+								int fileLength = BitConverter.ToInt32(readBuffer);
+
+								aes.Padding = PaddingMode.PKCS7;
+								aes.Mode = CipherMode.CBC;
+								aes.Key = commonInfo.SessionKey;
+								aes.BlockSize = 128;
+								aes.IV = iv;
+
+								using (FileStream outFile = new FileStream(resultFileName, FileMode.Create, FileAccess.Write))
+								using (var cryptoStream =
+								       new CryptoStream(outFile, aes.CreateDecryptor(), CryptoStreamMode.Write))
 								{
-									fileLength += rest;
+									int rest = fileLength % aesBlockSize;
+									if (rest != 0)
+									{
+										fileLength += rest;
+									}
+
+									CopyStream(inFile, cryptoStream, (int)fileLength, endIteration);
 								}
-								CopyStream(inFile, cryptoStream, fileLength);
 							}
 						}
 
@@ -197,7 +214,7 @@ namespace CryptoRoomLib
 			info.FileLength = (ulong)(fi.Length + FileFormat.IvSize + 
 			                          FileFormat.DataSizeInfo); //Размер закодированного блока.
 
-			long rLen = fi.Length % 16;
+			long rLen = fi.Length % aesBlockSize;
 			if(rLen != 0) info.FileLength += (ulong)rLen;
 
 
@@ -220,24 +237,23 @@ namespace CryptoRoomLib
 
 			//Делаем размер iv cовместимый с форматом файла.
 			byte[] iv = CipherTools.GenerateRand(FileFormat.IvSize); //Формирую случайный начальный вектор.
-			byte[] aesIv = new byte[16];
-			Buffer.BlockCopy(iv,0,aesIv,0,16);
+			byte[] aesIv = new byte[aesBlockSize];
+			Buffer.BlockCopy(iv,0,aesIv,0, aesBlockSize);
 
 			info.BlockData = asWriter.GetData();
 
-			setDataSize(100);
-			setMaxBlockCount(100);
-			endIteration(1);
+			int blockCount = (int)(fi.Length / bufferSize);
+			setDataSize((ulong)fi.Length);
+			setMaxBlockCount((ulong)blockCount);
 
-			using (var aes = AesManaged.Create())
+			using (var aes = Aes.Create())
 			{
 				aes.Padding = PaddingMode.PKCS7;
 				aes.Mode = CipherMode.CBC;
 				aes.Key = info.SessionKey;
-				aes.BlockSize = 128; // AES-128
+				aes.BlockSize = 128;
 				aes.IV = aesIv;
 
-				using (var encryptor = aes.CreateEncryptor())
 				using (FileStream outFile = new FileStream(resultFileName, FileMode.Create, FileAccess.Write))
 				using (FileStream inFile = new FileStream(srcPath, FileMode.Open, FileAccess.Read))
 				{
@@ -246,11 +262,11 @@ namespace CryptoRoomLib
 
 					outFile.Write(info.FileHead);
 					outFile.Write(fileSizeInfo); //Размер кодированного файла.
-
+					
 					using (var cryptoStream =
-					       new CryptoStream(outFile, encryptor, CryptoStreamMode.Write))
+					       new CryptoStream(outFile, aes.CreateEncryptor(), CryptoStreamMode.Write))
 					{
-						inFile.CopyTo(cryptoStream);
+						CopyStream(inFile,cryptoStream, (int)inFile.Length, endIteration);
 					}
 				}
 			}
@@ -263,9 +279,10 @@ namespace CryptoRoomLib
 				outFile.Close();
 			}
 
-			endIteration(50);
-
 			sendMessage($"Шифрование файла {fileName} завершено.");
+
+
+			endIteration((ulong)(blockCount * 80 / 100));
 
 			sendMessage($"Подпись файла {fileName} ...");
 			var signTools = new SignTools();
@@ -275,7 +292,7 @@ namespace CryptoRoomLib
 				return false;
 			}
 
-			endIteration(100);
+			endIteration((ulong)blockCount);
 			sendMessage($"Подпись файла {fileName} завершена.");
 
 			return true;
