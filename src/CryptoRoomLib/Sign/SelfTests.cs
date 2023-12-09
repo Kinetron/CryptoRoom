@@ -80,9 +80,9 @@ namespace CryptoRoomLib.Sign
             EcPoint Q = new EcPoint();
             Q = PointMath.GenPublicKey(d, p); //Открытый ключ.
 
-            var sign = signToolsGen.Sign(d, message, p);
+            var sign = signToolsGen.Sign(d, message, p, SignHashAlgoritmEnum.Gost);
            
-            bool result = signToolsGen.Verify(message, sign, Q, p);
+            bool result = signToolsGen.Verify(message, sign, Q, p, SignHashAlgoritmEnum.Gost);
             if (!result)
             {
                 LastError = "SignTest: Ошибка проверки подписи.";
@@ -90,7 +90,7 @@ namespace CryptoRoomLib.Sign
             }
 
             message[0] = 0;
-            result = signToolsGen.Verify(message, sign, Q, p);
+            result = signToolsGen.Verify(message, sign, Q, p, SignHashAlgoritmEnum.Gost);
             if (result)
             {
                 LastError = "SignTest: Неверный алгоритм проверки подписи";

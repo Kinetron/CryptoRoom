@@ -1,4 +1,5 @@
-﻿using CryptoRoomLib.AsymmetricInformation;
+﻿using System.Security.Cryptography;
+using CryptoRoomLib.AsymmetricInformation;
 using CryptoRoomLib.Models;
 
 namespace CryptoRoomLib.Sign
@@ -28,14 +29,14 @@ namespace CryptoRoomLib.Sign
         /// Подписывает сообщение message, используя закрытый ключ d и точку P.
         /// </summary>
         /// <returns></returns>
-        public Signature Sign(BigInteger d, byte[] message, EcPoint p)
+        public Signature Sign(BigInteger d, byte[] message, EcPoint p, SignHashAlgoritmEnum hashAlgoritmEnum)
         {
             if (d == 0) throw new ArgumentException("Private key for sign can't be 0.");
 
             //Узнаю количество бит порядка эллиптической кривой.
             int qSize = p.Q.bitCount();
 
-            var hash = CalculatedHash(message, qSize);
+            var hash = CalculatedHash(message, qSize, hashAlgoritmEnum);
             HashResult = hash;
             var alpha = new BigInteger(hash);
             var t1 = alpha.ToHexString();
@@ -73,9 +74,9 @@ namespace CryptoRoomLib.Sign
         /// <summary>
         /// Проверяет подпись sign, сообщения message, используя откр. ключ Q. В случае успеха возвращает true.
         /// </summary>
-        public bool Verify(byte[] message, Signature sign, EcPoint pointQ, EcPoint p)
+        public bool Verify(byte[] message, Signature sign, EcPoint pointQ, EcPoint p, SignHashAlgoritmEnum hashAlgoritm)
         {
-            BigInteger alpha = new BigInteger(CalculatedHash(message, p.Q.bitCount()));
+            BigInteger alpha = new BigInteger(CalculatedHash(message, p.Q.bitCount(), hashAlgoritm));
             return Verify(sign, pointQ, p, alpha);
         }
 
@@ -125,38 +126,53 @@ namespace CryptoRoomLib.Sign
             return false;
         }
 
-        /// <summary>
-        /// Вычисляет хеш сообщения.
-        /// </summary>
-        /// <param name="message"></param>
-        /// <param name="bitCount"></param>
-        /// <returns></returns>
-        private byte[] CalculatedHash(byte[] message, int bitCount)
-        {
-            Hash3411.Hash3411 hasher = new Hash3411.Hash3411();
-            byte[] hashResult;
+		/// <summary>
+		/// Вычисляет хеш сообщения.
+		/// </summary>
+		/// <param name="message"></param>
+		/// <param name="bitCount"></param>
+		/// <returns></returns>
+		private byte[] CalculatedHash(byte[] message, int bitCount, SignHashAlgoritmEnum hashAlgoritmEnum)
+		{
+			byte[] hashResult = new byte[16];
 
-            if (bitCount < 500)
-            {
-                hashResult = new byte[32];
-                hasher.Hash256(message, hashResult);
-            }
-            else
-            {
-                hashResult = new byte[64];
-                hasher.Hash512(message, hashResult);
-            }
+			switch (hashAlgoritmEnum)
+			{
+				case SignHashAlgoritmEnum.Gost:
+					Hash3411.Hash3411 hasher = new Hash3411.Hash3411();
 
-            return hashResult;
-        }
+					if (bitCount < 500)
+					{
+						hashResult = new byte[32];
+						hasher.Hash256(message, hashResult);
+					}
+					else
+					{
+						hashResult = new byte[64];
+						hasher.Hash512(message, hashResult);
+					}
 
-        /// <summary>
-        /// Подпись файла.
-        /// </summary>
-        /// <param name="file"></param>
-        /// <param name="sendMessage"></param>
-        /// <returns></returns>
-        public bool SignFile(string srcfile, Action<string> sendMessage, string ecOid, byte[] signPrivateKey, EcPoint ecPublicKey)
+					break;
+
+				case SignHashAlgoritmEnum.Sha256:
+					using (var sha = new SHA256Managed())
+					{
+						hashResult = sha.ComputeHash(message);
+					}
+
+					break;
+			}
+
+			return hashResult;
+		}
+
+		/// <summary>
+		/// Подпись файла.
+		/// </summary>
+		/// <param name="file"></param>
+		/// <param name="sendMessage"></param>
+		/// <returns></returns>
+		public bool SignFile(string srcfile, Action<string> sendMessage, string ecOid, byte[] signPrivateKey, EcPoint ecPublicKey, SignHashAlgoritmEnum hashAlgoritmEnum)
         {
             FileInfo fi = new FileInfo(srcfile);
 
@@ -176,7 +192,7 @@ namespace CryptoRoomLib.Sign
                 if (p == null) return false;
 
                 SignTools signToolsGen = new SignTools();
-                var sign = signToolsGen.Sign(new BigInteger(signPrivateKey), fileData, p);
+                var sign = signToolsGen.Sign(new BigInteger(signPrivateKey), fileData, p, hashAlgoritmEnum);
                 var check = signToolsGen.VerifyUseHashResult(sign, ecPublicKey, p);
                 if (!check)
                 {
@@ -218,7 +234,7 @@ namespace CryptoRoomLib.Sign
                 sign.S = new BigInteger(info.VectorS);
 
                 SignTools signToolsGen = new SignTools();
-                if (!signToolsGen.Verify(fileData, sign, ecPublicKey, p))
+                if (!signToolsGen.Verify(fileData, sign, ecPublicKey, p, SignHashAlgoritmEnum.Gost))
                 {
                     LastError = "Не верная подпись файла. Файл был поврежден или изменен третьим лицом.";
                     return false;

@@ -72,12 +72,12 @@ namespace CryptoRoomLib
 						$"Проверка подписи {fileName}  завершена.",
 					() =>
 					{
-						var signTools = new SignTools();
-						if (!signTools.CheckSign(srcPath, commonInfo, ecOid, ecPublicKey))
-						{
-							LastError = signTools.LastError;
-							return signTools.LastError;
-						}
+						//var signTools = new SignTools();
+						//if (!signTools.CheckSign(srcPath, commonInfo, ecOid, ecPublicKey))
+						//{
+						//	LastError = signTools.LastError;
+						//	return signTools.LastError;
+						//}
 
 						return string.Empty;
 					},
@@ -123,10 +123,15 @@ namespace CryptoRoomLib
 								using (var cryptoStream =
 								       new CryptoStream(outFile, aes.CreateDecryptor(), CryptoStreamMode.Write))
 								{
-									int rest = fileLength % aesBlockSize;
-									if (rest != 0)
+									//Для текущих настроек padding aes справедлив этот алгоритм.
+									int rLen = fileLength % aesBlockSize;
+									if (rLen == 0)
 									{
-										fileLength += rest;
+										fileLength += aesBlockSize;
+									}
+									else
+									{
+										fileLength += aesBlockSize - rLen;
 									}
 
 									CopyStream(inFile, cryptoStream, (int)fileLength, endIteration);
@@ -211,12 +216,21 @@ namespace CryptoRoomLib
 			CommonFileInfo info = new CommonFileInfo();
 
 			FileInfo fi = new FileInfo(srcPath);
+
+			//Размер закодированного блока.
 			info.FileLength = (ulong)(fi.Length + FileFormat.IvSize + 
-			                          FileFormat.DataSizeInfo); //Размер закодированного блока.
+			                          FileFormat.DataSizeInfo);
 
-			long rLen = fi.Length % aesBlockSize;
-			if(rLen != 0) info.FileLength += (ulong)rLen;
-
+			//Для текущих настроек padding aes справедлив этот алгоритм.
+			int rLen = (int)(fi.Length % aesBlockSize);
+			if (rLen == 0)
+			{
+				info.FileLength += aesBlockSize;
+			}
+			else
+			{
+				info.FileLength += (ulong)(aesBlockSize - rLen);
+			}
 
 			info.FileHead = FileFormat.CreateCryptFileTitle(info.FileLength, _algoritm, false);
 			info.SessionKey = CipherTools.GenerateRand(32); //Формирую случайное число размером 32байта, которое является сеансовым ключом.
@@ -262,11 +276,12 @@ namespace CryptoRoomLib
 
 					outFile.Write(info.FileHead);
 					outFile.Write(fileSizeInfo); //Размер кодированного файла.
-					
+
 					using (var cryptoStream =
 					       new CryptoStream(outFile, aes.CreateEncryptor(), CryptoStreamMode.Write))
 					{
-						CopyStream(inFile,cryptoStream, (int)inFile.Length, endIteration);
+						//CopyStream(inFile,cryptoStream, (int)inFile.Length, endIteration);
+						inFile.CopyTo(cryptoStream);
 					}
 				}
 			}
@@ -286,7 +301,7 @@ namespace CryptoRoomLib
 
 			sendMessage($"Подпись файла {fileName} ...");
 			var signTools = new SignTools();
-			if (!signTools.SignFile(resultFileName, sendMessage, ecOid, signPrivateKey, ecPublicKey))
+			if (!signTools.SignFile(resultFileName, sendMessage, ecOid, signPrivateKey, ecPublicKey, SignHashAlgoritmEnum.Sha256))
 			{
 				LastError = signTools.LastError;
 				return false;

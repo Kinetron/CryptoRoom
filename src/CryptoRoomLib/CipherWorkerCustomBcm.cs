@@ -245,7 +245,7 @@ namespace CryptoRoomLib
 
             sendMessage($"Подпись файла {fileName} ...");
             var signTools = new SignTools();
-            if (!signTools.SignFile(resultFileName, sendMessage, ecOid, signPrivateKey, ecPublicKey))
+            if (!signTools.SignFile(resultFileName, sendMessage, ecOid, signPrivateKey, ecPublicKey, SignHashAlgoritmEnum.Gost))
             {
                 LastError = signTools.LastError;
                 return false;
