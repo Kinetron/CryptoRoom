@@ -131,11 +131,23 @@ namespace CryptoRoomLib
             return iv;
         }
 
-        /// <summary>
-        /// Формирует заголовок шифруемого файла.
-        /// </summary>
-        /// <returns></returns>
-        internal static byte[] CreateCryptFileTitle(ulong fileLen, ICipherAlgoritm algoritm)
+		/// <summary>
+		/// Обвертка для получения данных гост алгоритма.
+		/// </summary>
+		/// <param name="fileLen"></param>
+		/// <param name="algoritm"></param>
+		/// <returns></returns>
+		internal static byte[] CreateCryptFileTitle(ulong fileLen, ICipherAlgoritm algoritm)
+        {
+	        return CreateCryptFileTitle(fileLen, algoritm);
+        }
+
+
+		/// <summary>
+		/// Формирует заголовок шифруемого файла.
+		/// </summary>
+		/// <returns></returns>
+		internal static byte[] CreateCryptFileTitle(ulong fileLen, ICipherAlgoritm algoritm, bool modifiSize = true)
         {
             byte[] fileTitle = new byte[CryptFileHeadLen + DataSizeInfo];
 
@@ -154,16 +166,19 @@ namespace CryptoRoomLib
 
             //Преобразовывает длину блока данных в массив из 8 байт.
 
-            //Модификация размера. 
-            ulong tail = fileLen % (ulong)algoritm.BlockSize;
-            if (tail == 0) fileLen += (ulong)algoritm.BlockSize + (ulong)IvSize; //Если размер файла кратен 16: 16 байт длина, 32 iv
-            else
+            if (modifiSize) //для гост, вынести во внутренний алгоритм.
             {
-                fileLen -= tail;
-                //Сообщение дополняется блоком 16 байт  если его длина не кратна 16.
-                fileLen += (ulong)algoritm.BlockSize * 2 + (ulong)IvSize;
+	            //Модификация размера. 
+	            ulong tail = fileLen % (ulong)algoritm.BlockSize;
+	            if (tail == 0) fileLen += (ulong)algoritm.BlockSize + (ulong)IvSize; //Если размер файла кратен 16: 16 байт длина, 32 iv
+	            else
+	            {
+		            fileLen -= tail;
+		            //Сообщение дополняется блоком 16 байт  если его длина не кратна 16.
+		            fileLen += (ulong)algoritm.BlockSize * 2 + (ulong)IvSize;
+	            }
             }
-            
+
             byte[] fileLenInfo = BitConverter.GetBytes(fileLen);
             Buffer.BlockCopy(fileLenInfo, 0, fileTitle, curentArrayPos, fileLenInfo.Length);
 

@@ -144,7 +144,7 @@ namespace CryptoRoomLib.Tests
             ICipherAlgoritm algoritm = new CipherAlgoritm3412();
             IBlockCipherMode cipherMode = new ModeCBC(algoritm);
 
-            CipherWorker worker = new CipherWorker(cipherMode);
+            CipherWorkerCustomBcm worker = new CipherWorkerCustomBcm(cipherMode);
 
             ulong blockCount = 0;
             ulong blockNum = 0;
@@ -177,7 +177,7 @@ namespace CryptoRoomLib.Tests
             ICipherAlgoritm algoritm = new CipherAlgoritm3412();
             IBlockCipherMode cipherMode = new ModeCBC(algoritm);
             
-            CipherWorker worker = new CipherWorker(cipherMode);
+            CipherWorkerCustomBcm worker = new CipherWorkerCustomBcm(cipherMode);
 
             ulong blockCount = 0;
             ulong blockNum = 0;

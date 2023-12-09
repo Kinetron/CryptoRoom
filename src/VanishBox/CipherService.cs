@@ -88,13 +88,15 @@ namespace VanishBox
             ulong blockCount = 0;
             ulong blockNum = 0;
             ulong decryptDataSize = 0;
-            
-            ICipherAlgoritm algoritm = new CipherAlgoritm3412();
-            IBlockCipherMode cipherMode = new ModeCBC(algoritm);
 
-            CipherWorker worker = new CipherWorker(cipherMode);
-            
-            foreach (var file in paths)
+			//ICipherAlgoritm algoritm = new CipherAlgoritm3412();
+			//IBlockCipherMode cipherMode = new ModeCBC(algoritm);
+			//ICipherWorker worker = new CipherWorkerCustomBcm(cipherMode);
+
+			ICipherAlgoritm algoritm = new CipherAlgoritmAes();
+			ICipherWorker worker = new CipherWorkerAes(algoritm);
+
+			foreach (var file in paths)
             {
                 string fileName = Path.GetFileName(file);
 
