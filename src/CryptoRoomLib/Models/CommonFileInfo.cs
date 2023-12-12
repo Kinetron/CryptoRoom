@@ -70,5 +70,10 @@ namespace CryptoRoomLib.Models
         /// Позиция в файле начала блока подписи
         /// </summary>
         public long BeginSignBlockPosition { get; set; }
-    }
+
+		/// <summary>
+		/// Подпись файла на основание алгоритма HMACSHA256.
+		/// </summary>
+		public byte[] HmacSha256Hash { get; set; }
+	}
 }

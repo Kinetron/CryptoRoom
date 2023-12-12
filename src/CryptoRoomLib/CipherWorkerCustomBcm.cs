@@ -6,10 +6,11 @@ using System.Diagnostics;
 
 namespace CryptoRoomLib
 {
-    /// <summary>
-    /// Содержит методы для шифрования файлов.
-    /// </summary>
-    public class CipherWorker
+	/// <summary>
+	/// Содержит методы для шифрования файлов с возможностью использования
+	/// пользовательского режима сцепки блоков шифра.
+	/// </summary>
+	public class CipherWorkerCustomBcm : ICipherWorker
     {
         /// <summary>
         /// Режим работы блочного шифра.
@@ -21,7 +22,7 @@ namespace CryptoRoomLib
         /// </summary>
         public string LastError { get; set; }
 
-        public CipherWorker(IBlockCipherMode blockCipherMode)
+        public CipherWorkerCustomBcm(IBlockCipherMode blockCipherMode)
         {
             _blockCipherMode = blockCipherMode; 
         }
@@ -71,8 +72,8 @@ namespace CryptoRoomLib
         /// <param name="setDataSize">Возвращает размер декодируемых данных.</param>
         /// <returns></returns>
         public bool DecryptingFileParallel(string srcPath, string resultFileName, byte[] privateAsymmetricKey,
-            string ecOid, EcPoint ecPublicKey,
-            Action<ulong> setDataSize, Action<ulong> setMaxBlockCount, Action<ulong> endIteration,
+            string ecOid, EcPoint ecPublicKey, byte[] signPrivateKey,
+			Action<ulong> setDataSize, Action<ulong> setMaxBlockCount, Action<ulong> endIteration,
             Action<string> sendProcessText)
         {
             var commonInfo = ReadFileInfo(srcPath, privateAsymmetricKey);
@@ -139,7 +140,7 @@ namespace CryptoRoomLib
         /// <param name="func"></param>
         /// <param name="sendProcessText"></param>
         /// <returns></returns>
-        private bool MeasureTime(string beginMessage, string errorMessage, string success, Func<string> func, Action<string> sendProcessText)
+        public bool MeasureTime(string beginMessage, string errorMessage, string success, Func<string> func, Action<string> sendProcessText)
         {
             sendProcessText(beginMessage);
 
@@ -164,7 +165,7 @@ namespace CryptoRoomLib
         /// Считывает из файла основные данные.
         /// </summary>
         /// <returns></returns>
-        private CommonFileInfo ReadFileInfo(string srcPath, byte[] privateAsymmetricKey)
+        public CommonFileInfo ReadFileInfo(string srcPath, byte[] privateAsymmetricKey)
         {
             var commonInfo = FileFormat.ReadFileInfo(srcPath);
             if (commonInfo == null)
@@ -244,7 +245,7 @@ namespace CryptoRoomLib
 
             sendMessage($"Подпись файла {fileName} ...");
             var signTools = new SignTools();
-            if (!signTools.SignFile(resultFileName, sendMessage, ecOid, signPrivateKey, ecPublicKey))
+            if (!signTools.SignFile(resultFileName, sendMessage, ecOid, signPrivateKey, ecPublicKey, SignHashAlgoritmEnum.Gost))
             {
                 LastError = signTools.LastError;
                 return false;

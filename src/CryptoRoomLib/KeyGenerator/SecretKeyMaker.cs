@@ -26,7 +26,7 @@ namespace CryptoRoomLib.KeyGenerator
         /// <summary>
         /// Расширение файла ключа.
         /// </summary>
-        public static string KeyExtension = "grk";
+        public static string KeyExtension = "crk";
 
         /// <summary>
         /// Размер соли для кодирование ключа подписи.

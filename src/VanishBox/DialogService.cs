@@ -89,10 +89,10 @@ namespace VanishBox
             var messageBoxCustomWindow = MessageBox.Avalonia.MessageBoxManager.GetMessageBoxCustomWindow(
                 new MessageBoxCustomParams
                 {
-                    ContentTitle = "Ошибка",
+                    ContentTitle = "Подтверждение",
                     ContentMessage = interaction.Input,
                     FontFamily = "Microsoft YaHei,Simsun",
-                    Icon = MessageBoxAvaloniaEnums.Icon.Error,
+                    Icon = MessageBoxAvaloniaEnums.Icon.Question,
                     WindowIcon = new WindowIcon("./Assets/app.ico"),
                     ButtonDefinitions = new[]
                     {

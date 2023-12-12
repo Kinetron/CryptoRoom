@@ -88,13 +88,27 @@ namespace CryptoRoomLib.AsymmetricInformation
             });
         }
 
-        /// <summary>
-        /// Создает блок содержащий сведения о подписи.
-        /// </summary>
-        /// <param name="sign"></param>
-        /// <param name="signIndex"></param>
-        /// <returns></returns>
-        public byte[] CreateSignBlock(Signature sign, byte[] signIndex)
+		/// <summary>
+		/// Создает блок подписи hmacsha256
+		/// </summary>
+		/// <param name="data"></param>
+		private void SignHmacSha256(byte[] data)
+        {
+	        Blocks.Add(new AsBlockData()
+	        {
+		        Type = AsBlockDataTypes.HmacSha256,
+		        Data = data
+	        });
+        }
+
+
+		/// <summary>
+		/// Создает блок содержащий сведения о подписи.
+		/// </summary>
+		/// <param name="sign"></param>
+		/// <param name="signIndex"></param>
+		/// <returns></returns>
+		public byte[] CreateSignBlock(Signature sign, byte[] signIndex)
         {
             //Порядок блоков обязателен! Встречая блок R – определяем позицию в файле где начинается подпись.
             SignR(CipherTools.PaddingLeft(sign.R.getBytes()));
@@ -103,13 +117,31 @@ namespace CryptoRoomLib.AsymmetricInformation
 
             return GetData();
         }
+
+		/// <summary>
+		/// Создает блок содержащий сведения о подписи.
+		/// </summary>
+		/// <param name="signR"></param>
+		/// <param name="signL"></param>
+		/// <param name="signIndex"></param>
+		/// <returns></returns>
+		public byte[] CreateSignHmacSha256(byte[] sign, byte[] signIndex)
+		{
+            //Только для совместимости проверок.
+			SignR(new byte[64]);
+			SignS(new byte[64]);
+			SignedIndex(signIndex);
+            SignHmacSha256(sign);
+
+			return GetData();
+		}
         
-        /// <summary>
-        /// На основании блоков формирует бинарную последовательность похожую на ASN1.
-        /// [тип блока  1 байт][длина данных 4 байта][данные]
-        /// </summary>
-        /// <returns></returns>
-        public byte[] GetData()
+		/// <summary>
+		/// На основании блоков формирует бинарную последовательность похожую на ASN1.
+		/// [тип блока  1 байт][длина данных 4 байта][данные]
+		/// </summary>
+		/// <returns></returns>
+		public byte[] GetData()
         {
             int size = 0;
             Blocks.ForEach((x) =>
