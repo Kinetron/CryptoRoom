@@ -1,4 +1,4 @@
-<h1 align="center">Система криптографической защиты информации «CryptoRoom»</h1>
+<h1 align="center">Система криптографической защиты информации «CryptoRoom» .Net 6</h1>
 <p align="left">
 <i>
 Разрабатывается с 2019 года
@@ -55,4 +55,25 @@ Cкорости декодирования(при использовании  hd
 </p>
 <p align="left">
 Ключи шифрования храниться в контейнере, защищенным паролем. Контейнер генерируется пользователем и сохраняется в любом указанном месте.
+</p>
+<br>
+<br>
+<strong>CryptoRoom</strong> содержит:<br><br>
+  <p>
+     <strong>CryptoRoomLib</strong>- .Net библиотека шифрования;
+  </p>
+  <p>
+    <strong>CryptoRoomLib.Tests</strong>- тесты библиотеки;
+  </p>
+  <p>
+  <strong>VanishBox</strong>- программа шифрования файлов, для UI используется Avalonia-11.0.0-preview8.
+  </p>
+  <p>
+     <strong>CryptoRoomApp</strong>-консольный демо пример для работы с библиотекой(в разработке).
+  </p> 
+  <p>
+    <strong>Ui\MessageBox.Avalonia </strong>-библиотека диалоговых окон  AvaloniaUI и MVVM (https://github.com/AvaloniaCommunity/MessageBox.Avalonia).
+  </p>
+
+
 </p>
