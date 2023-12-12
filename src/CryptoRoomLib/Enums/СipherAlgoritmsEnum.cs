@@ -10,6 +10,6 @@
 		/// </summary>
 		RsaAesSha256 = 0,
 
-		RsaGost = 1,
+		RsaGos = 1,
 	}
 }
