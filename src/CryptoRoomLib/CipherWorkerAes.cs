@@ -40,14 +40,14 @@ namespace CryptoRoomLib
 		{
 			throw new NotImplementedException();
 		}
-		private void CopyStream(Stream input, Stream output, int bytes, Action<ulong> progress)
+		private void CopyStream(Stream input, Stream output, long bytes, Action<ulong> progress)
 		{
 			byte[] buffer = new byte[bufferSize];
 			int read;
 			ulong writeBytes = 0;
 
 			while (bytes > 0 &&
-			       (read = input.Read(buffer, 0, Math.Min(buffer.Length, bytes))) > 0)
+			       (read = input.Read(buffer, 0, (int)Math.Min(buffer.Length, bytes))) > 0)
 			{
 				output.Write(buffer, 0, read);
 				bytes -= read;
@@ -57,7 +57,7 @@ namespace CryptoRoomLib
 		}
 
 		public bool DecryptingFileParallel(string srcPath, string resultFileName, byte[] privateAsymmetricKey, string ecOid,
-			EcPoint ecPublicKey, Action<ulong> setDataSize, Action<ulong> setMaxBlockCount, Action<ulong> endIteration, Action<string> sendProcessText)
+			EcPoint ecPublicKey, byte[] signPrivateKey, Action<ulong> setDataSize, Action<ulong> setMaxBlockCount, Action<ulong> endIteration, Action<string> sendProcessText)
 		{
 			var commonInfo = ReadFileInfo(srcPath, privateAsymmetricKey);
 			if (commonInfo == null) return false;
@@ -72,12 +72,11 @@ namespace CryptoRoomLib
 						$"Проверка подписи {fileName}  завершена.",
 					() =>
 					{
-						//var signTools = new SignTools();
-						//if (!signTools.CheckSign(srcPath, commonInfo, ecOid, ecPublicKey))
-						//{
-						//	LastError = signTools.LastError;
-						//	return signTools.LastError;
-						//}
+						HmacSha256 sign = new HmacSha256(); 
+						if (!sign.VerifyFile(srcPath, signPrivateKey, commonInfo.HmacSha256Hash))
+						{
+							return "Неверная подпись файла";
+						}
 
 						return string.Empty;
 					},
@@ -111,7 +110,7 @@ namespace CryptoRoomLib
 								inFile.Read(buffSpan);
 
 								//Размер рельного файла.
-								int fileLength = BitConverter.ToInt32(readBuffer);
+								long fileLength = BitConverter.ToInt64(readBuffer);
 
 								aes.Padding = PaddingMode.PKCS7;
 								aes.Mode = CipherMode.CBC;
@@ -124,7 +123,7 @@ namespace CryptoRoomLib
 								       new CryptoStream(outFile, aes.CreateDecryptor(), CryptoStreamMode.Write))
 								{
 									//Для текущих настроек padding aes справедлив этот алгоритм.
-									int rLen = fileLength % aesBlockSize;
+									long rLen = fileLength % aesBlockSize;
 									if (rLen == 0)
 									{
 										fileLength += aesBlockSize;
@@ -134,7 +133,7 @@ namespace CryptoRoomLib
 										fileLength += aesBlockSize - rLen;
 									}
 
-									CopyStream(inFile, cryptoStream, (int)fileLength, endIteration);
+									CopyStream(inFile, cryptoStream, fileLength, endIteration);
 								}
 							}
 						}
@@ -300,12 +299,9 @@ namespace CryptoRoomLib
 			endIteration((ulong)(blockCount * 80 / 100));
 
 			sendMessage($"Подпись файла {fileName} ...");
-			var signTools = new SignTools();
-			if (!signTools.SignFile(resultFileName, sendMessage, ecOid, signPrivateKey, ecPublicKey, SignHashAlgoritmEnum.Sha256))
-			{
-				LastError = signTools.LastError;
-				return false;
-			}
+
+			HmacSha256 sign = new HmacSha256();
+			sign.SignFile(resultFileName, signPrivateKey);
 
 			endIteration((ulong)blockCount);
 			sendMessage($"Подпись файла {fileName} завершена.");

@@ -72,8 +72,8 @@ namespace CryptoRoomLib
         /// <param name="setDataSize">Возвращает размер декодируемых данных.</param>
         /// <returns></returns>
         public bool DecryptingFileParallel(string srcPath, string resultFileName, byte[] privateAsymmetricKey,
-            string ecOid, EcPoint ecPublicKey,
-            Action<ulong> setDataSize, Action<ulong> setMaxBlockCount, Action<ulong> endIteration,
+            string ecOid, EcPoint ecPublicKey, byte[] signPrivateKey,
+			Action<ulong> setDataSize, Action<ulong> setMaxBlockCount, Action<ulong> endIteration,
             Action<string> sendProcessText)
         {
             var commonInfo = ReadFileInfo(srcPath, privateAsymmetricKey);

@@ -30,7 +30,7 @@ public interface ICipherWorker
 	/// <param name="setDataSize">Возвращает размер декодируемых данных.</param>
 	/// <returns></returns>
 	bool DecryptingFileParallel(string srcPath, string resultFileName, byte[] privateAsymmetricKey,
-		string ecOid, EcPoint ecPublicKey,
+		string ecOid, EcPoint ecPublicKey, byte[] signPrivateKey,
 		Action<ulong> setDataSize, Action<ulong> setMaxBlockCount, Action<ulong> endIteration,
 		Action<string> sendProcessText);
 

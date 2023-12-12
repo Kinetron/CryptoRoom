@@ -14,12 +14,15 @@ using System.Xml.Linq;
 using System.Diagnostics;
 using System.Threading;
 using static System.Net.Mime.MediaTypeNames;
+using CryptoRoomLib.Enums;
 
 namespace VanishBox
 {
     public class CipherService : ICipherService
     {
-        /// <summary>
+	    private readonly СipherAlgoritmsEnum _сipherAlgoritm;
+
+	    /// <summary>
         /// Сообщение об ошибке.
         /// </summary>
         public string LastError { get; set; }
@@ -31,9 +34,10 @@ namespace VanishBox
 
         private readonly KeyService _keyService;
 
-        public CipherService()
+        public CipherService(СipherAlgoritmsEnum сipherAlgoritm)
         {
-            _keyService = new KeyService();
+	        _сipherAlgoritm = сipherAlgoritm;
+	        _keyService = new KeyService();
         }
 
         /// <summary>
@@ -83,19 +87,28 @@ namespace VanishBox
             }
 
             var dstDir = CreateDstDir(paths[0], dstDirName);
-
-
+            
             ulong blockCount = 0;
             ulong blockNum = 0;
             ulong decryptDataSize = 0;
 
-			//ICipherAlgoritm algoritm = new CipherAlgoritm3412();
-			//IBlockCipherMode cipherMode = new ModeCBC(algoritm);
-			//ICipherWorker worker = new CipherWorkerCustomBcm(cipherMode);
+            ICipherAlgoritm algoritm;
+            ICipherWorker worker = null;
 
-			ICipherAlgoritm algoritm = new CipherAlgoritmAes();
-			ICipherWorker worker = new CipherWorkerAes(algoritm);
+			switch (_сipherAlgoritm)
+			{
+				case СipherAlgoritmsEnum.RsaAesSha256:
+					algoritm = new CipherAlgoritmAes();
+					worker = new CipherWorkerAes(algoritm);
+				break;
 
+				case СipherAlgoritmsEnum.RsaGost:
+					algoritm = new CipherAlgoritm3412();
+					IBlockCipherMode cipherMode = new ModeCBC(algoritm);
+					worker = new CipherWorkerCustomBcm(cipherMode);
+				break;
+			}
+            
 			foreach (var file in paths)
             {
                 string fileName = Path.GetFileName(file);
@@ -142,8 +155,8 @@ namespace VanishBox
                 else
                 {
                     result = worker.DecryptingFileParallel(file, resultFileName, _keyService.GetPrivateAsymmetricKey(),
-                        _keyService.KeyContainer.EcOid, _keyService.EcPublicKey,
-                        (size) => { decryptDataSize = size; },
+                        _keyService.KeyContainer.EcOid, _keyService.EcPublicKey, _keyService.GetSignPrivateKey(),
+						(size) => { decryptDataSize = size; },
                         (max) => { blockCount = max; },
                         (number) =>
                         {

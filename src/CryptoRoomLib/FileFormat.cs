@@ -139,10 +139,9 @@ namespace CryptoRoomLib
 		/// <returns></returns>
 		internal static byte[] CreateCryptFileTitle(ulong fileLen, ICipherAlgoritm algoritm)
         {
-	        return CreateCryptFileTitle(fileLen, algoritm);
+	        return CreateCryptFileTitle(fileLen, algoritm, true);
         }
-
-
+        
 		/// <summary>
 		/// Формирует заголовок шифруемого файла.
 		/// </summary>
@@ -192,15 +191,33 @@ namespace CryptoRoomLib
         /// <returns></returns>
         public static CommonFileInfo ReadFileInfo(string fileName)
         {
-            using (FileStream inFile = new FileStream(fileName, FileMode.Open, FileAccess.Read))
+	        string signFileName = $"{fileName}.sign";
+	        FileInfo fInfo = new FileInfo(signFileName);
+
+	        CommonFileInfo info = new CommonFileInfo(); //Данные шифрованного файла.
+
+			using (FileStream inFile = new FileStream(fileName, FileMode.Open, FileAccess.Read))
             {
-                CommonFileInfo info = new CommonFileInfo();
-                info.UserDataSize = FileFormat.ReadDataSize(inFile); //Считывает из файла размер блока шифрованных данных.
+	            info.UserDataSize = FileFormat.ReadDataSize(inFile); //Считывает из файла размер блока шифрованных данных.
 
                 //Чтение данных ассиметричной системы. Получение сессионного ключа.
                 var asymmetricData = new AsDataReader();
+
+				//Чтение шифрованного сеансового ключа и общей информации
+                // которая подписывается.
                 asymmetricData.Read(inFile, info.UserDataSize);
-                if (!asymmetricData.CheckAll())
+
+                //Существует файл подписи.
+                if (fInfo.Exists)
+                {
+	                using (FileStream signFile = new FileStream(signFileName, FileMode.Open, FileAccess.Read))
+	                {
+		              asymmetricData.ReadAsymmetricalData(signFile, 0);
+                      signFile.Close();
+					}
+                }
+                
+				if (!asymmetricData.CheckAll())
                 {
                     LastError = asymmetricData.Error;
                     return null;
@@ -210,6 +227,7 @@ namespace CryptoRoomLib
                 info.VectorR = asymmetricData.GetVectorR();
                 info.VectorS = asymmetricData.GetVectorS();
                 info.BeginSignBlockPosition = asymmetricData.BeginSignBlockPosition;
+                info.HmacSha256Hash = asymmetricData.HmacSha256();
 
                 if (info.CryptedSessionKey == null)
                 {
@@ -219,9 +237,37 @@ namespace CryptoRoomLib
                 
                 info.Iv = FileFormat.ReadIV(inFile, info.UserDataSize); //Считывает значение вектора iv.
                 info.BeginDataPosition = FileFormat.BeginDataBlock + FileFormat.DataSizeInfo;
-
-                return info;
+                
+                inFile.Close();
             }
+
+            //Блока подписей нет.
+			if (!fInfo.Exists)
+			{
+				CutFilePart(fileName, signFileName, info.BeginSignBlockPosition);
+			}
+			return info;
+		}
+
+		/// <summary>
+		/// Отрезает от файла кусочек и сохраняет в другой файл. Уменьшает размер первого файла.
+		/// </summary>
+		/// <param name="srcPath"></param>
+		/// <param name="dstPath"></param>
+		/// <param name="beginPosition"></param>
+		private static void CutFilePart(string srcPath, string dstPath, long beginPosition)
+        {
+	        //Копирую блок подписи.
+	        using (FileStream src = new FileStream(srcPath, FileMode.Open, FileAccess.ReadWrite))
+	        using (FileStream dst = new FileStream(dstPath, FileMode.Create))
+	        {
+		        src.Position = beginPosition;
+		        src.CopyTo(dst);
+		        src.SetLength(beginPosition); //Обрезаю файл
+
+		        dst.Close();
+		        src.Close();
+	        }
         }
-    }
+	}
 }

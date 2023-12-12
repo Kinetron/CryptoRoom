@@ -21,7 +21,7 @@ public partial class SelectPathToKeyWindow : ReactiveWindow<SelectPathToKeyViewM
              ViewModel!.SelectPathDialog.RegisterHandler((context =>
              {
                  return _dialogService.SelectFileFilterAsync(context, 
-                    new FileDialogFilter() { Name = "Файл ключа", Extensions = { "grk" } });
+                    new FileDialogFilter() { Name = "Файл ключа", Extensions = { "crk" } });
              }));
             ViewModel!.OkCommand.Subscribe(CloseIfNotEmpty);
             ViewModel!.ShowErrorDialog.RegisterHandler(_dialogService.ShowErrorDialogAsync);

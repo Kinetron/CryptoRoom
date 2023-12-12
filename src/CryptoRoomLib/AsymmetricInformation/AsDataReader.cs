@@ -31,43 +31,56 @@
             Blocks = new List<AsBlockData>();
         }
 
-        public void Read(FileStream inFile, ulong dataLen)
+		/// <summary>
+		/// Читает данные ассиметричной системы в шифрованном файле с учетом заголовков.
+		/// </summary>
+		/// <param name="inFile"></param>
+		/// <param name="dataLen"></param>
+		public void Read(FileStream inFile, ulong dataLen)
         {
             //Вычисляю позицию в которой заканчиваются шифрованные данные
             dataLen += (ulong)(FileFormat.BeginDataBlock + FileFormat.DataSizeInfo); //Позиция конца блока данных
-
-            //Устанавливаю текущую позицию на начало блока данных.
-            inFile.Position = (long)dataLen;
-
-            byte[] title = new byte[FileFormat.AsymmetricHeadSize]; //Заголовок 5 байт [тип][длина] 
-
-            int blockLen = 0; //Длина блока данных ассиметричной системы.
-            
-            //Файл может содержать произвольное количество блоков данных.
-            while (inFile.Position < inFile.Length)
-            {
-                inFile.Read(title, 0, FileFormat.AsymmetricHeadSize);
-
-                //Читаю блок данных.
-                blockLen = DecodeAssymetricalDataLen(title);
-                AsBlockData block = new AsBlockData();
-                block.Type = (AsBlockDataTypes)title[AsymmetricPosInHeadType];
-                block.Data = new byte[blockLen];
-
-                //Позиция в файле начала блока данных.
-                if (block.Type == AsBlockDataTypes.VectorR) BeginSignBlockPosition = inFile.Position - title.Length;
-
-                inFile.Read(block.Data, 0, blockLen);
-                Blocks.Add(block);
-            }
+            ReadAsymmetricalData(inFile, dataLen);
         }
 
-        /// <summary>
-        /// Получаю длину блока ассиметричных данных.
-        /// </summary>
-        /// <param name="asTitle"></param>
-        /// <returns></returns>
-        private static int DecodeAssymetricalDataLen(byte[] asTitle)
+		/// <summary>
+		/// Читает данные ассиметричной системы.
+		/// </summary>
+		public void ReadAsymmetricalData(FileStream inFile, ulong dataLen)
+        {
+	        //Устанавливаю текущую позицию на начало блока данных.
+	        inFile.Position = (long)dataLen;
+
+	        byte[] title = new byte[FileFormat.AsymmetricHeadSize]; //Заголовок 5 байт [тип][длина] 
+
+	        int blockLen = 0; //Длина блока данных ассиметричной системы.
+
+	        //Файл может содержать произвольное количество блоков данных.
+	        while (inFile.Position < inFile.Length)
+	        {
+		        inFile.Read(title, 0, FileFormat.AsymmetricHeadSize);
+
+		        //Читаю блок данных.
+		        blockLen = DecodeAssymetricalDataLen(title);
+		        AsBlockData block = new AsBlockData();
+		        block.Type = (AsBlockDataTypes)title[AsymmetricPosInHeadType];
+		        block.Data = new byte[blockLen];
+
+		        //Позиция в файле начала блока данных.
+		        if (block.Type == AsBlockDataTypes.VectorR) BeginSignBlockPosition = inFile.Position - title.Length;
+
+		        inFile.Read(block.Data, 0, blockLen);
+		        Blocks.Add(block);
+	        }
+		}
+
+
+		/// <summary>
+		/// Получаю длину блока ассиметричных данных.
+		/// </summary>
+		/// <param name="asTitle"></param>
+		/// <returns></returns>
+		private static int DecodeAssymetricalDataLen(byte[] asTitle)
         {
             //Заголовок 5 байт [тип][длина] 
             return BitConverter.ToInt32(asTitle, 1);
@@ -169,5 +182,14 @@
         {
             return Blocks.Where(x => x.Type == AsBlockDataTypes.VectorS).First().Data;
         }
-    }
+
+        /// <summary>
+        /// Возвращает подпись Sha256.
+        /// </summary>
+        /// <returns></returns>
+        public byte[] HmacSha256()
+        {
+			return Blocks.Where(x => x.Type == AsBlockDataTypes.HmacSha256).FirstOrDefault()?.Data;
+        }
+	}
 }
