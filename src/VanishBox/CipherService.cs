@@ -102,7 +102,7 @@ namespace VanishBox
 					worker = new CipherWorkerAes(algoritm);
 				break;
 
-				case СipherAlgoritmsEnum.RsaGost:
+				case СipherAlgoritmsEnum.RsaGos:
 					algoritm = new CipherAlgoritm3412();
 					IBlockCipherMode cipherMode = new ModeCBC(algoritm);
 					worker = new CipherWorkerCustomBcm(cipherMode);
